@@ -6,7 +6,6 @@
  ** 描  述: 
  ** 作  者: # Qifeng.zou # Wed 06 May 2015 10:03:15 AM CST #
  ******************************************************************************/
-
 #include "comm.h"
 #include "shm_ring.h"
 #include "shm_slot.h"

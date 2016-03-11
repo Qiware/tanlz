@@ -8,7 +8,6 @@
  ** 作  者: # Qifeng.zou # Tue 05 May 2015 08:47:46 AM CST #
  ******************************************************************************/
 
-#include "log.h"
 #include "comm.h"
 #include "slot.h"
 

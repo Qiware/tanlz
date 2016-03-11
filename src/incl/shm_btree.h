@@ -1,7 +1,6 @@
 #if !defined(__SHM_BTREE_H__)
 #define __SHM_BTREE_H__
 
-#include "log.h"
 #include "comm.h"
 #include "redo.h"
 #include "shm_slab.h"
@@ -47,14 +46,13 @@ typedef struct
 typedef struct
 {
     void *addr;                                     /* 首地址 */
-    log_cycle_t *log;                               /* 日志对象 */
 
     shm_btree_t *btree;                             /* B树 */
     shm_slab_pool_t *pool;                          /* 内存池 */
 } shm_btree_cntx_t;
 
-extern shm_btree_cntx_t *shm_btree_creat(const char *path, int m, size_t total, log_cycle_t *log);
-shm_btree_cntx_t *shm_btree_attach(const char *path, int m, size_t total, log_cycle_t *log);
+extern shm_btree_cntx_t *shm_btree_creat(const char *path, int m, size_t total);
+shm_btree_cntx_t *shm_btree_attach(const char *path, int m, size_t total);
 int shm_btree_insert(shm_btree_cntx_t *ctx, int key, void *data);
 int shm_btree_remove(shm_btree_cntx_t *ctx, int key);
 void *shm_btree_query(shm_btree_cntx_t *ctx, int key);

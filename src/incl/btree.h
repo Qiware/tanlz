@@ -1,13 +1,10 @@
 #if !defined(__B_TREE_H__)
 #define __B_TREE_H__
 
-#include "log.h"
 #include "comm.h"
 
 typedef struct
 {
-    log_cycle_t *log;                               /* 日志对象 */
-
     void *pool;                                     /* 内存池 */
     mem_alloc_cb_t alloc;                           /* 申请内存 */
     mem_dealloc_cb_t dealloc;                       /* 释放内存 */
@@ -33,8 +30,6 @@ typedef struct
 
     struct
     {
-        log_cycle_t *log;                           /* 日志对象 */
-
         void *pool;                                 /* 内存池 */
         mem_alloc_cb_t alloc;                       /* 申请内存 */
         mem_dealloc_cb_t dealloc;                   /* 释放内存 */

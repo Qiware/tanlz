@@ -1,4 +1,3 @@
-#include "log.h"
 #include "uri.h"
 #include "comm.h"
 #include "http.h"

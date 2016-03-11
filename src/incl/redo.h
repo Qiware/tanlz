@@ -19,6 +19,7 @@ int Mkdir(const char *dir, mode_t mode);
 int Mkdir2(const char *fname, mode_t mode);
 
 int Random(void);
+int System(const char *cmd);
 
 bool proc_is_exist(pid_t pid);
 

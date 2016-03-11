@@ -70,11 +70,8 @@ int tcp_listen(int port)
  ******************************************************************************/
 int tcp_accept(int lsnfd, struct sockaddr *cliaddr)
 {
-    int fd, opt = 1;
-    struct linger lg;
+    int fd, opt;
     socklen_t len = sizeof(cliaddr);
-
-    memset(&lg, 0, sizeof(lg));
 
     /* > 接收连接请求 */
     fd = accept(lsnfd, (struct sockaddr *)cliaddr, &len);
@@ -83,13 +80,8 @@ int tcp_accept(int lsnfd, struct sockaddr *cliaddr)
     }
 
     /* > 设置套接字属性 */
-    /* 解决: 端口被占用的问题 */
-    setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int));
-
-    /* 解决: 过多CLOSE_WAIT造成TOO MANY FILES TO OPEN */
-    lg.l_onoff = 1;
-    lg.l_linger = 0;
-    setsockopt(fd, SOL_SOCKET, SO_LINGER, (char *)&lg, sizeof(lg)); 
+    opt = 1;
+    setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(int)); /* 解决: 端口被占用的问题 */
 
     fd_set_nonblocking(fd);
 
@@ -155,7 +147,7 @@ int tcp_connect(int family, const char *ipaddr, int port)
 }
 
 /******************************************************************************
- **函数名称: tcp_connect_ex
+ **函数名称: tcp_connect_timeout
  **功    能: 连接指定服务器(超时返回)
  **输入参数: 
  **     family: 协议(AF_INET/AF_INET6)
@@ -172,7 +164,7 @@ int tcp_connect(int family, const char *ipaddr, int port)
  **     1) SO_REUSEADDR: 
  **作    者: # Qifeng.zou & Menglai.Wang # 2014.09.25 #
  ******************************************************************************/
-int tcp_connect_ex(int family, const char *ipaddr, int port, int sec)
+int tcp_connect_timeout(int family, const char *ipaddr, int port, int sec)
 {
     int ret, fd, opt = 1;
     fd_set rdset, wrset;
@@ -231,7 +223,7 @@ AGAIN:
 }
 
 /******************************************************************************
- **函数名称: tcp_connect_ex2
+ **函数名称: tcp_connect_async
  **功    能: 连接指定服务器
  **输入参数: 
  **     family: 协议(AF_INET/AF_INET6)
@@ -246,7 +238,7 @@ AGAIN:
  **注意事项: 
  **作    者: # Qifeng.zou # 2014.10.09 #
  ******************************************************************************/
-int tcp_connect_ex2(int family, const char *ipaddr, int port)
+int tcp_connect_async(int family, const char *ipaddr, int port)
 {
     int fd, opt = 1;
     struct sockaddr_in svraddr;

@@ -75,8 +75,8 @@ typedef struct _socket_t
 int tcp_listen(int port);
 int tcp_accept(int lsnfd, struct sockaddr *cliaddr);
 int tcp_connect(int family, const char *ipaddr, int port);
-int tcp_connect_ex(int family, const char *ipaddr, int port, int sec);
-int tcp_connect_ex2(int family, const char *ipaddr, int port);
+int tcp_connect_timeout(int family, const char *ipaddr, int port, int sec);
+int tcp_connect_async(int family, const char *ipaddr, int port);
 int tcp_block_send(int fd, const void *addr, int len, int timeout);
 int tcp_block_recv(int fd, void *addr, int len, int timeout);
 

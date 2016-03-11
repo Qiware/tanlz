@@ -15,7 +15,6 @@
  **            关键字均小于Ki[i=0,1,...,n-1], 但都大于Ki-1[i=1,...,n-1];
  ** 作  者: # Qifeng.zou # 2015.08.10 #
  ******************************************************************************/
-#include "log.h"
 #include "shm_btree.h"
 
 #define shm_btree_ptr_to_off(ctx, ptr) (off_t)((void *)(ptr) - (ctx)->addr)
@@ -52,7 +51,7 @@ static int _shm_btree_merge(shm_btree_cntx_t *ctx, shm_btree_node_t *left, shm_b
  **注意事项:
  **作    者: # Qifeng.zou # 2015.08.10 #
  ******************************************************************************/
-shm_btree_cntx_t *shm_btree_creat(const char *path, int m, size_t total, log_cycle_t *log)
+shm_btree_cntx_t *shm_btree_creat(const char *path, int m, size_t total)
 {
     int fd;
     void *addr;
@@ -61,14 +60,12 @@ shm_btree_cntx_t *shm_btree_creat(const char *path, int m, size_t total, log_cyc
     shm_btree_cntx_t *ctx;
 
     if (m < 3) {
-        log_error(log, "Parameter 'm' must geater than 2!");
         return NULL;
     }
 
     /* > 载入内存 */
     fd = open(path, OPEN_FLAGS, OPEN_MODE);
     if (fd < 0) {
-        log_error(log, "errmsg:[%d] %s!", errno, strerror(errno));
         return NULL;
     }
 
@@ -78,7 +75,6 @@ shm_btree_cntx_t *shm_btree_creat(const char *path, int m, size_t total, log_cyc
 
     addr = mmap(NULL, total, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
     if (NULL == addr) {
-        log_error(log, "errmsg:[%d] %s!", errno, strerror(errno));
         close(fd);
         return NULL;
     }
@@ -88,11 +84,9 @@ shm_btree_cntx_t *shm_btree_creat(const char *path, int m, size_t total, log_cyc
     /* > 创建对象 */
     ctx = (shm_btree_cntx_t *)calloc(1, sizeof(shm_btree_cntx_t));
     if (NULL == ctx) {
-        log_error(log, "Alloc memory failed!");
         return NULL;
     }
 
-    ctx->log = log;
     ctx->addr = addr;
     ctx->btree = (shm_btree_t *)addr;
     ctx->pool = (shm_slab_pool_t *)(addr + sizeof(shm_btree_t));
@@ -127,7 +121,6 @@ shm_btree_cntx_t *shm_btree_creat(const char *path, int m, size_t total, log_cyc
  **     path: B树路径
  **     m: 阶(m >= 3)
  **     total: B树空间总大小
- **     log: 日志对象
  **输出参数: NONE
  **返    回: B树
  **实现描述:
@@ -144,7 +137,7 @@ shm_btree_cntx_t *shm_btree_creat(const char *path, int m, size_t total, log_cyc
  **注意事项:
  **作    者: # Qifeng.zou # 2015.08.11 #
  ******************************************************************************/
-shm_btree_cntx_t *shm_btree_attach(const char *path, int m, size_t total, log_cycle_t *log)
+shm_btree_cntx_t *shm_btree_attach(const char *path, int m, size_t total)
 {
     int fd;
     void *addr;
@@ -153,27 +146,23 @@ shm_btree_cntx_t *shm_btree_attach(const char *path, int m, size_t total, log_cy
     shm_btree_cntx_t *ctx;
 
     if (m < 3) {
-        log_error(log, "Parameter 'm' must geater than 2!");
         return NULL;
     }
 
     if (stat(path, &st)
         || total != (size_t)st.st_size)
     {
-        log_error(log, "errmsg:[%d] %s!", errno, strerror(errno));
         return NULL;
     }
 
     /* > 载入内存 */
     fd = open(path, OPEN_FLAGS, OPEN_MODE);
     if (fd < 0) {
-        log_error(log, "errmsg:[%d] %s!", errno, strerror(errno));
         return NULL;
     }
 
     addr = mmap(NULL, total, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0);
     if (NULL == addr) {
-        log_error(log, "errmsg:[%d] %s!", errno, strerror(errno));
         close(fd);
         return NULL;
     }
@@ -183,11 +172,9 @@ shm_btree_cntx_t *shm_btree_attach(const char *path, int m, size_t total, log_cy
     /* > 创建对象 */
     ctx = (shm_btree_cntx_t *)calloc(1, sizeof(shm_btree_cntx_t));
     if (NULL == ctx) {
-        log_error(log, "Alloc memory failed!");
         return NULL;
     }
 
-    ctx->log = log;
     ctx->addr = addr;
     ctx->btree = (shm_btree_t *)addr;
     ctx->pool = (shm_slab_pool_t *)(addr + sizeof(shm_btree_t));
@@ -270,7 +257,6 @@ int shm_btree_insert(shm_btree_cntx_t *ctx, int key, void *data)
     if (0 == btree->root) {
         node = shm_btree_node_alloc(ctx);
         if (NULL == node) {
-            log_error(ctx->log, "Create node failed!");
             return -1;
         }
         
@@ -294,7 +280,6 @@ int shm_btree_insert(shm_btree_cntx_t *ctx, int key, void *data)
         /* 二分查找算法实现 */
         idx = shm_btree_key_bsearch(node_key, node->num, key);
         if (key == node_key[idx]) {
-            log_warn(ctx->log, "Key [%d] exist!", key);
             return 0;
         }
         else if (key > node_key[idx]) {
@@ -386,7 +371,6 @@ static int shm_btree_split(shm_btree_cntx_t *ctx, shm_btree_node_t *node)
 
         node2 = shm_btree_node_alloc(ctx);
         if (NULL == node2) {
-            log_error(ctx->log, "Create node failed!");
             return -1;
         }
 
@@ -413,7 +397,6 @@ static int shm_btree_split(shm_btree_cntx_t *ctx, shm_btree_node_t *node)
             /* Split root node */
             parent = shm_btree_node_alloc(ctx);
             if (NULL == parent) {
-                log_error(ctx->log, "Create root failed!");
                 return -1;
             }
 
@@ -599,7 +582,6 @@ static int shm_btree_merge(shm_btree_cntx_t *ctx, shm_btree_node_t *node)
     }
 
     if (idx > parent->num) {
-        log_error(ctx->log, "Didn't find node from parent's children set!");
         return -1;
     }
     /* 3. node: 最后一个孩子结点(left < node)
@@ -910,7 +892,6 @@ static shm_btree_node_t *shm_btree_node_alloc(shm_btree_cntx_t *ctx)
 
     node = (shm_btree_node_t *)shm_slab_alloc(ctx->pool, sizeof(shm_btree_node_t));
     if (NULL == node) {
-        log_error(ctx->log, "Alloc memory failed!");
         return NULL;
     }
 
@@ -921,7 +902,6 @@ static shm_btree_node_t *shm_btree_node_alloc(shm_btree_cntx_t *ctx)
     node_key = (int *)shm_slab_alloc(ctx->pool, (btree->max + 1) * sizeof(int));
     if (NULL == node_key) {
         shm_slab_dealloc(ctx->pool, node);
-        log_error(ctx->log, "Alloc memory failed!");
         return NULL;
     }
 
@@ -931,7 +911,6 @@ static shm_btree_node_t *shm_btree_node_alloc(shm_btree_cntx_t *ctx)
     if (NULL == node_data) {
         shm_slab_dealloc(ctx->pool, node_key);
         shm_slab_dealloc(ctx->pool, node);
-        log_error(ctx->log, "Alloc memory failed!");
         return NULL;
     }
 
@@ -943,7 +922,6 @@ static shm_btree_node_t *shm_btree_node_alloc(shm_btree_cntx_t *ctx)
         shm_slab_dealloc(ctx->pool, node_key);
         shm_slab_dealloc(ctx->pool, node_data);
         shm_slab_dealloc(ctx->pool, node);
-        log_error(ctx->log, "Alloc memory failed!");
         return NULL;
     }
 
@@ -1068,7 +1046,6 @@ void *shm_btree_query(shm_btree_cntx_t *ctx, int key)
 
         idx = shm_btree_key_bsearch(node_key, node->num, key);
         if (key == node_key[idx]) {
-            log_debug(ctx->log, "Found! key:%d idx:%d", key, idx);
             return (void *)shm_btree_off_to_ptr(ctx, node_data[idx]); /* 找到 */
         }
         else if (key < node_key[idx]) {

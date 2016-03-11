@@ -890,7 +890,7 @@ static int crwl_worker_task_down_webpage(
     crwl_worker_socket_extra_t *extra;
 
     /* > 连接远程WEB服务器 */
-    fd = tcp_connect_ex2(args->family, args->ip, args->port);
+    fd = tcp_connect_async(args->family, args->ip, args->port);
     if (fd < 0) {
         log_error(worker->log, "errmsg:[%d] %s! family:%d ip:%s uri:%s",
             errno, strerror(errno), args->family, args->ip, args->uri);
